@@ -1,0 +1,138 @@
+graphs:
+
+  # ===== Graph connecting with the LSL from MuseS =====
+  #
+  # Reads the raw LSL stream from MuseS and publishes it on the topic "raw"
+  #
+  - id: ReceiveSendLSL
+    nodes:
+      # Receive EEG signal from the lsl-stream
+      - id: eeg_LSL_receiver
+        module: timeflux.nodes_dev.lsl
+        class: Receive
+        params:
+          prop: type
+          value: EEG
+          sync: null #null #2023-05-03
+          unit: s # changes to 'ms' for The Crown (should be 's' for Muse S)
+          drop: Right AUX # Use for Muse S. Fot for The Crown. Smarting?
+
+      # Receive markers from stimuli program from the lsl-stream
+      - id: markers_stimuli_LSL_receiver
+        module: timeflux.nodes_dev.lsl
+        class: Receive
+        params:
+          # prop: type
+          # value: Markers
+          sync: null
+          prop: name
+          value: MarkerStream #MarkersStimuli
+          channels: [label, data]
+
+      # Receive events (such as status in admin node) from the lsl-stream
+      - id: status_admin_LSL_receiver
+        module: timeflux.nodes_dev.lsl
+        class: Receive
+        params:
+          # prop: type
+          # value: Markers
+          sync: null
+          prop: name
+          value: AdminStatusStream
+          channels: [label, data]
+
+      # Send events on LSL
+      - id: send_results_LSL
+        module: timeflux.nodes_dev.lsl
+        class: Send
+        params:
+          name: ml_results
+          type: Marker
+          format: string
+          source: timeflux0001
+
+      # REMOVE
+      # Receive ml_restilts signal from the lsl-stream
+      #- id: ml_LSL_receiver
+      #  module: timeflux.nodes_dev.lsl
+      #  class: Receive
+      #  params:
+      #    sync: null
+      #    prop: name
+      #    value: ml_results
+      #    #channels: ["1","2","3","4","5","6","7","8"]
+      #    unit: ns # changes to 'ms' for The Crown (should be 's' for Muse S)
+
+
+          #drop: Right AUX
+
+      # Receive events (such as status in admin node) from the lsl-stream
+      #- id: status_websocket_client
+      #  module: timeflux.nodes_dev.websockets_node
+      #  class: WSC
+      #  params:
+      #    port: 5793
+
+      # Publish the raw EEG signal
+      - id: pub_eeg
+        module: timeflux.nodes.zmq
+        class: Pub
+        params:
+          topic: eeg_raw
+      # Publish markers
+      - id: pub_markers
+        module: timeflux.nodes.zmq
+        class: Pub
+        params:
+          topic: events
+      # Publish admin status 
+      - id: pub_admin_status
+        module: timeflux.nodes.zmq
+        class: Pub
+        params:
+          topic: events
+
+      # Subscribe to "ml" results
+      - id: sub_results
+        module: timeflux.nodes.zmq
+        class: Sub
+        params:
+          topics: [predictions, variance]
+
+
+      # If we want to display something (debug)
+      - id: display
+        module: timeflux.nodes.debug
+        class: Display
+
+      # If we want to display something (debug)
+      - id: display2
+        module: timeflux.nodes.debug
+        class: Display
+
+    # Connect nodes
+    edges:
+      - source: eeg_LSL_receiver
+        target: pub_eeg
+      - source: markers_stimuli_LSL_receiver
+        target: pub_markers
+      - source: status_admin_LSL_receiver
+        target: pub_admin_status
+
+      # REMOVE
+      #- source: eeg_LSL_receiver
+      #  target: display2
+
+      # Sub and send
+      - source: sub_results:variance
+        target: send_results_LSL:variance
+    
+      # Sub and send
+      - source: sub_results:predictions
+        target: send_results_LSL:predictions
+
+      # Debug
+      #- source: sub_results:variance
+      #  target: display
+
+    rate: 20 # CHANGE TO 0 (or someting else)?

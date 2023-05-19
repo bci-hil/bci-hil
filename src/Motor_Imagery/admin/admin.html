@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+<title>BCI-HIL MI example - Client GUI</title>
+
+</head><body id="contento">
+<script src="js/chart360.min.js"></script>
+<style>
+body {margin:auto; width:100%; color:#cccccc;}
+.bg {position:fixed; height: 100vh;width: 100%;top:0; left:0; z-index:-50;background-attachment:fixed; background-image:linear-gradient(#002020, #206060 50%, #184250 90%, #002020 100%)}
+.svgimg {position:inline; top:0; left:0; z-index:-5;}
+.logo {position:fixed; top:4%; right:1%; z-index:-6; width:7%; opacity:50%}
+.header {display:absolute; justify-content:center; text-align: center;font-size:8vw; color: #ffffff; opacity: 25%; z-index:10}
+.timestamp {position:fixed; display:absolute; justify-content:right; text-align:right;font-size:3.5vw; font-family: "courier"; color: #ffffff; bottom: 0; right: 0}
+.recording {position:fixed; display:absolute; background: #800000; height: 40px; width: 40px;bottom: 20px; left: 20px;z-index: -3;border-radius: 25px; border-style: solid; border-color: #000000; border-width: 1px;}
+.stimuli {justify-content:center; text-align: center;font-size:2vw; color: #ffffff; opacity: 50%; z-index:10}
+h1 {color:#8090a0; font-family: "Arial"}
+</style>
+
+<div class="bg"></div>
+<div id="header" class="header">BCI-HIL MI Example</div>
+<img id="logo" class="logo" src="LundUniversity_C2line_NEG.svg">
+<button onclick="goFullscreen(); return false">-> Full screen (F)</button>
+Calibrate Client latency: <button onclick="calibrateAudioDisplay(); return false">audio vs. display</button>
+<button onclick="calibrateEEGAudio(); return false">EEG vs. audio</button>
+<button onclick="calibrateEEGVideo(); return false">EEG vs. display</button>
+<span class="users">The engine isn't up and running yet.</span>
+<span class="poll button">Poll status. </span>
+<span id="status">Status. </span>
+Number of clients:<span id="nof_clients">NaN</span><br>
+<button id="user_no_button" onclick="set_user_no(); return false">Set user number</button>
+<button onclick="start_accumulation(); return false">Start Accumulation</button>
+<button onclick="start_fitting(); return false">Start fitting</button>
+Set user @<input id="user_no" value="0001" size=5> then
+<button id="start" onclick="start_session(); return false">start calibration (A)</button> then click:
+<button disabled id="stop" onclick="stop_session(); return false">stop calibration (S)</button>
+<button id="cancel" onclick="cancel_session(); return false">cancel calibration (C)</button>
+<br>Elapsed seconds is <span id="elapsed_seconds">0</span>. 
+Nof shown stimuli so far is <span id="nof_shown_stimuli">0</span>.
+Stimuli sequence in this session: <span id="stimuli_sequence"></span>
+<div class="timestamp"><span id="timestamp"></span></div>
+<div class="recording" id="recording"></div>
+
+<table><tr><td>
+<center><h1>Category probability</h1></center>
+<div id="chart4_holder"><center><canvas id="chart4-area"></canvas></center></div>
+<center><h1>EEG channel variance</h1></center>
+<div id="chart3_holder"><center><canvas id="chart3-area"></canvas></center></div>
+</td><td>
+<center><h1>Category histogram</h1></center>
+<div id="chart_holder"><center><canvas id="chart-area"></canvas></center></div>
+<div id="chart2_holder"><center><canvas id="chart2-area"></canvas></center></div>
+</td><td>
+<div id="svgdiv">
+<div id="p00" class="stimuli"><br><br>LEFT</div>
+<div id="p01" class="stimuli"><br><br>RIGHT</div>
+<div id="p02" class="stimuli"><br><br>TOUNGE</div>
+<div id="p03" class="stimuli"><br><br>FEET</div>
+</div>
+
+</td></tr></table>
+<script src="admin.js"></script>
+</body></html>

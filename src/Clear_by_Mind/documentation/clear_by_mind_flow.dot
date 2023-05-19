@@ -1,0 +1,42 @@
+# This description is hand written.
+# Showing the hardware setup in the clear by mind project
+
+digraph {
+  #splines=line;
+
+  any;
+  calibration [label="Calibration" style="filled" fillcolor="#8080ff"];
+
+  start [label="Start of\nsession" style="filled" fillcolor="#80ff80"];
+  ask_for_name [label="Ask for user's name" style="filled" fillcolor="cyan"];
+  tell_the_rules [label="Explain the rules\nto the user" style="filled" fillcolor="cyan"];
+  check_eeg [label="Show EEG signals\nCheck EEG quality" style="filled" fillcolor="cyan"];
+  ask_if_ready [label="Ask if user is ready" style="filled" fillcolor="cyan"];
+
+  record_baseline [label="5 seconds" style="filled" fillcolor="red"];
+
+  client_show [label="Showing suspect on Client screen" style="filled" fillcolor="yellow"];
+  client_unshow [label="Blank screen" style="filled" fillcolor="yellow"];
+  trial_done [label="Trial done"];
+  show_classification [label="Show results on Client screen"];
+  ask_for_correct_category [label="Ask user for correct category" style="filled" fillcolor="cyan"];
+
+  any -> calibration [label="#0998"];
+  calibration -> calibration [label="#(8000 + tick_no 1-8)"];
+  calibration -> start;
+  start -> ask_for_name;
+  ask_for_name -> tell_the_rules [label="Write user_no and name\linto user paper log\land user_no into Admin GUI"];
+  tell_the_rules -> check_eeg;
+  check_eeg -> ask_if_ready;
+  ask_if_ready -> record_baseline [label="Ask user to focus on the cross and think of nothing\lClick Start Trial in Admin GUI\l#user_no\l#(4000 + user_no) when first EEG arrives"];
+  record_baseline -> client_unshow;
+  client_unshow -> client_show [label="#(1000 + suspect_no)"];
+  client_show -> client_unshow [label="#(2000 + suspect_no)"];
+  client_show -> record_baseline [label="#4000"];
+  client_unshow -> trial_done;
+  trial_done -> show_classification [label="Click Stop Trial in Admin GUI\l#3000"];
+  show_classification -> ask_for_correct_category;
+  ask_for_correct_category -> start [label="Click correct category in Admin GUI\l#(9000 + category_no)"];
+  client_unshow -> start [label="Click cancel trial in Admin GUI\l#9999"];
+
+}

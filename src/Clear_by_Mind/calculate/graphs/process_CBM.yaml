@@ -1,0 +1,75 @@
+graphs:
+  - id: MachineLearning
+    nodes:
+
+      - id: sub
+        module: timeflux.nodes.zmq
+        class: Sub
+        params:
+          topics: [epochs, rolling, events, status_events]
+
+      - id: average_ERP
+        module: timeflux.nodes_dev.ml_inference
+        class: AverageERP
+
+      - id: variance
+        module: timeflux.nodes_dev.band_node
+        class: ChannelVarianceNode
+        params:
+          device: crown 
+          output_style: all
+
+
+      # Publish predictions
+      - id: pub_pred
+        module: timeflux.nodes.zmq
+        class: Pub
+        params:
+          topic: predictions  
+
+      # Publish channel variance
+      - id: pub_variance
+        module: timeflux.nodes.zmq
+        class: Pub
+        params:
+          topic: variance  
+
+      - id: display
+        module: timeflux.nodes.debug
+        class: Display
+
+      - id: display2
+        module: timeflux.nodes.debug
+        class: Display
+      
+      - id: display3
+        module: timeflux.nodes.debug
+        class: Display
+
+    edges:        
+      - source: sub:epochs
+        target: average_ERP:epochs 
+
+      - source: sub:status_events
+        target: average_ERP:status
+     
+      - source: average_ERP
+        target: pub_pred
+
+      - source: sub:rolling
+        target: variance
+
+      - source: variance
+        target: pub_variance
+
+      # Debug
+      - source: sub:status_events
+        target: display
+
+      - source: sub:events
+        target: display2
+
+      - source: average_ERP
+        target: display3    
+
+    rate: 3

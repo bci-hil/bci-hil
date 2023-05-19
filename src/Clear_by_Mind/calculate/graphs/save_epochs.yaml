@@ -1,0 +1,36 @@
+graphs:
+  - id: Save
+    nodes:
+      - id: sub
+        module: timeflux.nodes.zmq
+        class: Sub
+        params:
+          topics:
+            - epochs
+            - events
+
+      - id: save_numpy
+        module: timeflux.nodes_dev.save_numpy
+        class: SaveNumpy
+        params:
+          data_folder: ../data
+          status_admin: True
+          subject: {{ SUBJECT |default("subject0001") }} # use 'timeflux -d -e SUBJECT="xxx" yyy.yaml' to set this paramater
+          session: {{ SESSION |default("session0001") }}   # use 'timeflux -d -e SESSION="xxx" yyy.yaml' to set this paramater
+          no_epoch_samples: 640
+
+      - id: display
+        module: timeflux.nodes.debug
+        class: Display
+
+    edges:
+      - source: sub:epochs
+        target: save_numpy:epochs
+
+      - source: sub:events
+        target: save_numpy:events
+
+      #- source: sub:epochs
+      #  target: display
+
+    rate: 0.5

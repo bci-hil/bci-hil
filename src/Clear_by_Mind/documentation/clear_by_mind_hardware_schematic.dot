@@ -1,0 +1,70 @@
+# This description is hand written.
+# Showing the hardware setup in the clear by mind project
+
+digraph {
+  #splines=line;
+
+  subgraph cluster_0 {
+    label="LAPTOP";
+    style="filled";
+    color="#d8ffd8";
+    client;
+    admin;
+    engine;
+    muse_driver;
+    storage;
+  }
+
+  subgraph cluster_1 {
+    label="CLOUD\nor LAPTOP";
+    style="filled";
+    color="#d8d8ff";
+    calculator;
+    cloud_storage;
+  }
+
+//  subgraph cluster_1 {
+//    admin_mouse;
+//    admin_keyboard;
+//    admin_display;
+//  }
+
+  client [label="Client\nJavascript/CSS/HTML" shape=box style="filled" fillcolor="green"];
+  admin [label="Admin\nJavascript/CSS/HTML" shape=box style="filled" fillcolor="cyan"];
+  engine [label="Engine\nPython" style="filled" shape=box fillcolor="yellow"];
+  calculator [label="Calculator\nPython/Timeflux" shape=box style="filled" fillcolor="#ffd0d0"];
+  the_crown [label="the Crown\nEEG" style="filled" fillcolor="grey"];
+  wifi_router [label="Wifi\nRouter" style="filled" fillcolor="magenta"];
+  muse [label="Muse\nEEG" style="filled" fillcolor="grey"];
+  muse_driver [label="Muse\ndriver" shape=box style="filled" fillcolor="magenta"];
+  smarting [label="Smarting\nEEG" style="filled" fillcolor="grey"];
+  smarting_phone [label="Smarting\nPhone" style="filled" fillcolor="#ffd0ff"];
+  storage [shape=box label="Storage" style="filled" fillcolor="white"];
+  cloud_storage [shape=box label="Storage" style="filled" fillcolor="white"];
+  client_display [label="Client\nDisplay" style="filled" fillcolor="black" fontcolor="#ffffff"];
+  admin_display [label="Admin\nDisplay" style="filled" fillcolor="black" fontcolor="#ffffff"];
+  admin_mouse [label="Mouse" style="filled" fillcolor="black" fontcolor="#ffffff"];
+  admin_keyboard [label="Keyboard" style="filled" fillcolor="black" fontcolor="#ffffff"];
+
+  engine -> client [dir=both label="websocket\n6510"];
+  engine -> admin [dir=both label="websocket\n8580"];
+  engine -> storage [label="raw EEG\ndata"];
+  calculator -> engine [dir=both label="websocket\n7580"];
+  calculator -> engine [dir=both label="LSL\lmarker"];
+  calculator -> cloud_storage [label="epoched\ndata"];
+  the_crown -> wifi_router [label="LSL\lstream"];
+  wifi_router -> engine [label="LSL\lstream"];
+  wifi_router -> calculator [label="LSL\lstream"];
+  muse -> muse_driver [label="Bluetooth"];
+  muse_driver -> engine [label="LSL\lstream"];
+  muse_driver -> calculator [label="LSL\lstream"];
+  smarting -> smarting_phone [label="Bluetooth"];
+  smarting_phone -> wifi_router [label="LSL\lstream"];
+#  wifi_router -> engine [label="LSL\lstream"];
+#  wifi_router -> calculator [label="LSL\lstream"];
+  client -> client_display [label="HDMI"];
+  admin -> admin_display [label="HDMI or\nLAPTOP"];
+  admin_mouse -> admin [label="USB"];
+  admin_keyboard -> admin [label="USB"];
+
+}

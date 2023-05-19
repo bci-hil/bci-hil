@@ -1,0 +1,10 @@
+graphs:
+
+  # ===== The publish/subscribe broker graph =====
+  #
+  - id: PubSubBroker
+    nodes:
+    # Allow communication between graphs
+    - id: Broker
+      module: timeflux.nodes.zmq
+      class: Broker

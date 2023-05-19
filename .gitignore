@@ -1,0 +1,9 @@
+src/Motor_Imagery/engine/data
+src/Motor_Imagery/engine/session_log.txt
+src/Motor_Imagery/calculate/data
+src/Clear_by_Mind/engine/data
+src/Clear_by_Mind/engine/session_log.txt
+src/Clear_by_Mind/calculate/data
+.DS_Store
+__pycache__/
+*.pyc

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+<title>BCI-HIL MI example - Client GUI</title>
+
+<script id="vertexShader" type="x-shader/x-vertex">
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = vec4( position, 1.0 );
+  }
+</script>
+
+<script id="fragmentShader" type="x-shader/x-fragment">
+  uniform sampler2D tAudioData;
+  varying vec2 vUv;
+  void main() {
+    vec4 backgroundColor = vec4( 0.125, 0.125, 0.125, 0.7 );
+    vec4 color = vec4( 1.0, 1.0, 0.0, 1.0 );
+    float f = texture2D( tAudioData, vec2( vUv.x, 0.0 ) ).r;
+    float i = step( vUv.y, f ) * step( f - 0.0285, vUv.y );
+    gl_FragColor = vec4( mix( backgroundColor, color, i ) );
+  }
+</script>
+
+</head><body id="contento">
+<style>
+html {background: #000000;}
+body {margin:0px; color: #888888}
+.svgimg {position:fixed; top:0; left:0; z-index:-5;}
+.logo {position:fixed; top:4%; right:1%; z-index:-6; width:7%; opacity:30%}
+.header {display:absolute; justify-content:center; text-align: center;font-size:8vw; color: #ffffff; opacity: 25%; z-index:10}
+.prepare {display:absolute; position:fixed ;justify-content:center; text-align: center;font-size:5vw; font-family:"arial"; width: 100%;top:28%; color: #ffffff; opacity: 0%}
+.prepare2 {display:absolute; position:fixed ;justify-content:center; text-align: center;font-size:5vw; font-family:"arial"; width: 100%;top:28%; color: #ffffff; opacity: 0%}
+.get_ready {display:absolute; position:fixed ;justify-content:center; text-align: center;font-size:5vw; font-family:"arial"; width: 100%;top:28%; color: #ffffff; opacity: 0%}
+.calibrate {display:absolute; position:fixed ;justify-content:center; text-align: center;font-size:25vw; font-family:"arial"; width: 100%;top:28%; color: #ffffff; opacity: 0%}
+.introduction {display:absolute; position:fixed ;justify-content:center; text-align: center;font-size:4vw; font-family:"courier"; width: 100%;top:28%; color: #ffffff; opacity: 0%}
+.footer {display:absolute; position:fixed ;justify-content:center; text-align: left;font-size:1.5vw; font-family:"arial"; width: 100%;left: 4%;bottom:4%; color: #ffffff; opacity: 0%}
+.audio_latency_slider_div {display:absolute; position:fixed ;justify-content:center; text-align: center;font-size:5vw; font-family:"arial"; width: 100%;top:28%; color: #ffffff; opacity: 0%}
+#enable_audio_div {position:fixed;left:0%;bottom:0%;opacity:40%}
+body {margin: auto; width:100%;}
+
+.suspect_ground {display:absolute; position:fixed; width:100%; height:100%; top:25%; z-index:-30; background-image:radial-gradient(#ffffff, transparent 30%); z-index:-20;}
+
+#sunburst {position: absolute; width: 100%; height: 100%; overflow: hidden; opacity: 40%; z-index: 10; display: none; pointer-events:none}
+.inner {width: 300%; height: 300%; position: absolute; top: 110%; left: 50%; transform: translate(-50%, -50%); animation: spin 55s linear infinite;}
+@keyframes spin {from{transform: translate(-50%, -50%) rotate(0deg);} to {transform: translate(-50%, -50%) rotate(360deg);}}
+.gradient-wrap {width: 100%; height: 60%; overflow: hidden;}
+.gradient-wrap:last-child {transform: rotate(180deg);}
+.gradient {width: 100%; height: 200%; background: repeating-conic-gradient(hsl(0deg 0% 80% / 31%) 0deg 15deg, hsla(0,0%,100%,0) 0deg 30deg) #3c1c32 }
+.timestamp {position:fixed; display:absolute; justify-content:right; text-align:right;font-size:3.5vw; font-family: "courier"; color: #ffffff; bottom: 0; right: 0}
+.webgl {position:fixed; top:0; left:0; z-index:-2;}
+</style>
+<script src="three.js"></script>
+<div id="container" class="webgl"></div>
+
+<div id="sunburst"><div class="inner"><div class="gradient-wrap"><div class="gradient"></div></div><div class="gradient-wrap"><div class="gradient"></div></div></div></div>
+<img id="logo" class="logo" src="LundUniversity_C2line_NEG.svg">
+
+<!--<div id="header" class="header">MASTER<span style="writing-mode: tb-rl; transform: rotate(-180deg); font-size:3.7vw">your</span><span style="font-size:50%"> </span>MIND</div>
+-->
+<div id="header" class="header">BCI-HIL MI Example</div>
+<div id="prepare" class="prepare">CLEAR<br>YOUR MIND</div>
+<div id="countdown_plus" class="prepare"><br><br>+</div>
+<div id="p00" class="prepare"><br><br>LEFT</div>
+<div id="p01" class="prepare"><br><br>RIGHT</div>
+<div id="p02" class="prepare"><br><br>TOUNGE</div>
+<div id="p03" class="prepare"><br><br>FEET</div>
+<div id="countdown3" class="get_ready"><br><br>3</div>
+<div id="countdown2" class="get_ready"><br><br>2</div>
+<div id="countdown1" class="get_ready"><br><br>1</div>
+<div id="get_ready" class="get_ready"><br>GET<br>READY</div>
+
+<div id="audio_latency_slider_div" style="visibility: hidden;">
+<center>Audio latency vs display:&nbsp;<input type="range" id="audio_latency_slider" name="audio_latency" min=0 max=0.2 step=0.001 value=0 onInput="audio_latency_slider_input(this.value);">
+<label for="volume"><span id="audio_latency_slider_text">0.000</span> s</label></center>
+</div>
+<div id="enable_audio_div" style="visibility: visible;"><button onclick="enable_audio(); return false">Enable Audio</button></div>
+
+
+<div id="calibrate" class="calibrate"></div>
+
+
+<div id="introduction" class="introduction">Motor imagery cues<br>will be shown here<br>in the Client GUI</div>
+<div id="footer" class="footer">Martin Gemborn Nilsson<br>Pex Tufvesson<br>Department of Automatic Control, Lund University</div>
+
+<div id="suspect_ground" class="suspect_ground"></div>
+
+<div id="svgdiv">
+</div>
+
+<div class="buttons" hidden>
+  <span onclick="clicked_minus(); return false">&nbsp;-&nbsp;</span>
+  <span id="the_value">?</span>
+  <span onclick="clicked_plus(); return false">&nbsp;+&nbsp;</span>
+  <div class="state">
+    <span class="users">The engine isn't up and running yet.</span>
+  </div>
+  <div class="poll button">Poll status</div>
+  <span id="status">Status</span>
+  <button onclick="goFullscreen(); return false">-> Full screen</button>
+</div>
+
+
+<div class="timestamp"><span id="timestamp">time</span></div>
+
+<script src="client.js"></script>
+
+</body></html>

@@ -1,0 +1,6 @@
+import:
+  - ./broker.yaml
+  - ./lsl.yaml
+  - ./preprocessing_CBM.yaml
+  - ./process_CBM.yaml
+  - ./save_epochs.yaml

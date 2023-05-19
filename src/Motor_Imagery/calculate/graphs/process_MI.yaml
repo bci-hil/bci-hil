@@ -1,0 +1,136 @@
+graphs:
+  - id: MachineLearning
+    nodes:
+
+      - id: sub
+        module: timeflux.nodes.zmq
+        class: Sub
+        params:
+          topics: [epochs, rolling, status_events, events]
+
+      - id: ml_training
+        module: timeflux.nodes_dev.ml_training
+        class: TrainingML
+        params:
+          data_folder: ../data
+          path_save_model: ../data
+          subject: {{ SUBJECT |default("subject0001") }} # use 'timeflux -d -e SUBJECT="xxx" yyy.yaml' to set this paramater
+          session: {{ SESSION |default("session0001") }}   # use 'timeflux -d -e SESSION="xxx" yyy.yaml' to set this paramater
+          steps:
+
+          # ==== Some examples of pipelines ====
+          #
+          # == COV + SPFB ==
+          #  - module: pyriemann.estimation
+          #    class: ERPCovariances
+          #  - module: pyriemann.tangentspace
+          #    class: TangentSpace 
+          #    args:
+          #      metric: 'riemann'
+
+          # == Covariances + MDM ==
+            - module: pyriemann.estimation
+              class: Covariances
+            - module: pyriemann.classification
+              class: MDM
+              args:
+                metric: 'logeuclid'
+
+          # == Power spectral density + Logistic regression ==
+          #  - module: mne.decoding
+          #    class: PSDEstimator
+          #    args:
+          #      sfreq: 256
+          #      fmax: 30
+          #      verbose: 'critical'
+          #  - module: mne.decoding
+          #    class: Vectorizer
+          #  - module: sklearn.preprocessing
+          #    class: StandardScaler
+          #  - module: sklearn.linear_model
+          #    class: LogisticRegression
+
+
+      - id: variance
+        module: timeflux.nodes_dev.band_node
+        class: ChannelVarianceNode
+        params:
+          device: museS # Size of window when training model.
+          output_style: all
+
+
+      # Publish predictions
+      - id: pub_pred
+        module: timeflux.nodes.zmq
+        class: Pub
+        params:
+        #  topic: [prediction, variance] # TODO can we send both like this?
+          topic: predictions  
+
+      # Publish channel variance
+      - id: pub_variance
+        module: timeflux.nodes.zmq
+        class: Pub
+        params:
+        #  topic: [prediction, variance] # TODO can we send both like this?
+          topic: variance  
+
+      # Publish status_fitting
+      - id: pub_status_fitting
+        module: timeflux.nodes.zmq
+        class: Pub
+        params:
+          topic: status_compute  
+
+      - id: ml_inference
+        module: timeflux.nodes_dev.ml_inference
+        class: Inference
+        params:
+          model_folder: ../data
+          #model_name: model_04-05-2023-18:02:58.sav
+          #path_to_ml_model: ../../data/spfb/subject_name/session_name/model_25-05-2022-13:11:12.sav
+          subject: {{ SUBJECT |default("subject0001") }} # use 'timeflux -d -e SUBJECT="xxx" yyy.yaml' to set this paramater
+          session: {{ SESSION |default("session0001") }}   # use 'timeflux -d -e SESSION="xxx" yyy.yaml' to set this paramater
+          #path_to_model: ../../data/demo_MI_2023
+
+      - id: display
+        module: timeflux.nodes.debug
+        class: Display
+      
+      - id: display2
+        module: timeflux.nodes.debug
+        class: Display
+
+
+    edges:
+
+      - source: sub:status_events
+        target: ml_training:status_events
+      - source: sub:epochs
+        target: ml_training:epochs
+      - source: sub:events
+        target: ml_training:events
+      - source: ml_training
+        target: pub_status_fitting
+      
+      - source: sub:status_events
+        target: ml_inference:status_events
+      - source: sub:rolling
+        target: ml_inference:rolling
+      - source: sub:events
+        target: ml_inference:events
+      - source: ml_inference
+        target: pub_pred
+
+      - source: sub:rolling
+        target: variance
+      - source: variance
+        target: pub_variance
+
+      - source: sub:status_events
+        target: display
+
+      - source: sub:events
+        target: display2
+
+    rate: 3

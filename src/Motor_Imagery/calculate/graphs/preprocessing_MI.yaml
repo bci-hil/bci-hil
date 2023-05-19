@@ -1,0 +1,96 @@
+graphs:
+  - id: Preprocessing
+    nodes:
+      - id: sub
+        module: timeflux.nodes.zmq
+        class: Sub
+        params:
+          topics: [eeg_raw, events]
+
+      - id: bandpass_epochs
+        module: timeflux_dsp.nodes.filters
+        class: IIRFilter
+        params:
+          frequencies: [8, 30]
+          rate: 256
+          order: 3 #4
+
+      - id: bandpass_rolling
+        module: timeflux_dsp.nodes.filters
+        class: IIRFilter
+        params:
+          frequencies: [40, 60]
+          rate: 256
+          order: 3 #4
+
+      - id: epochs
+        module: timeflux.nodes_dev.epoch
+        class: Epoch
+        params:
+          before: 0.5
+          after: 2.1 # To have a few more samples than needed (good if epochs are trimmed)
+          event_trigger: show #999 #n # data type depends on choise of input
+
+      - id: trim
+        module: timeflux.nodes_dev.epoch
+        class: Trim
+        params:
+          samples: 512 # 2 seconds of data.
+
+      # Continuously buffer the signal
+      - id: rolling
+        module: timeflux.nodes.window
+        class: Window
+        params:
+          length: 128 # Size of window when training model.
+          step: 32 #32 # 1/4 of a second
+          index: sample
+          epochs: True
+
+      - id: pub_rolling
+        module: timeflux.nodes.zmq
+        class: Pub
+        params:
+          topic: rolling
+
+      - id: pub_epochs
+        module: timeflux.nodes.zmq
+        class: Pub
+        params:
+          topic: epochs
+
+      - id: display
+        module: timeflux.nodes.debug
+        class: Display
+      - id: display2
+        module: timeflux.nodes.debug
+        class: Display
+
+    edges:
+      # Epochs pipeline
+      - source: sub:eeg_raw
+        target: bandpass_epochs
+      - source: bandpass_epochs
+        target: epochs
+      - source: sub:events
+        target: epochs:events
+      - source: epochs
+        target: trim
+      - source: trim:0
+        target: pub_epochs
+
+      # Rolling pipeline
+      - source: sub:eeg_raw
+        target: bandpass_rolling
+      - source: bandpass_rolling
+        target: rolling
+      - source: rolling
+        target: pub_rolling
+
+      # Debug
+      #- source: trim
+      #  target: display
+      #- source: epochs
+      #  target: display2
+
+    rate: 10
